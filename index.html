@@ -568,6 +568,14 @@ h1.hero-name em { color: var(--accent); font-style: italic; }
   margin-top: .5rem;
 }
 .fsub:hover { background: #8f2c07; transform: translateY(-1px); }
+.fsub:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Form Validation */
+.fi.error, .fta.error { border-color: #ef4444 !important; background: rgba(239,68,68,.1); }
+.fi.success, .fta.success { border-color: #10b981 !important; background: rgba(16,185,129,.1); }
+.error-msg { display: none; font-size: .75rem; color: #ef4444; margin-top: .3rem; font-family: 'JetBrains Mono', monospace; }
+.error-msg.show { display: block; }
+.fg.has-error .error-msg { display: block; }
 
 /* ── FOOTER ── */
 footer {
@@ -1090,21 +1098,31 @@ h1.hero-name   { animation: fadeUp .6s ease .15s both; }
           <a href="tel:+919442525160" class="clink">
             <span class="clink-icon">📱</span>+91 94425 25160<span class="clink-arrow">↗</span>
           </a>
-          <a href="https://linkedin.com" target="_blank" class="clink">
+          <a href="https://www.linkedin.com/in/sridhar-maniganda-raman-8b397812b/" target="_blank" class="clink">
             <span class="clink-icon">💼</span>LinkedIn Profile<span class="clink-arrow">↗</span>
           </a>
-          <a href="#" class="clink dl">
-            <span class="clink-icon">📄</span>Download Resume (PDF)<span class="clink-arrow">↓</span>
-          </a>
+
         </div>
       </div>
-      <div class="cform reveal">
+      <form class="cform reveal" id="contactForm" action="https://formsubmit.co/srisantosh03@gmail.com" method="POST" onsubmit="validateAndSubmitForm(event)">
         <div class="cf-title">Send a Message</div>
-        <div class="fg"><label class="fl">Your Name</label><input type="text" class="fi" placeholder="Jane Smith"/></div>
-        <div class="fg"><label class="fl">Your Email</label><input type="email" class="fi" placeholder="jane@company.com"/></div>
-        <div class="fg"><label class="fl">Your Message</label><textarea class="fta" placeholder="Hey Sridhar, I'd love to connect about..."></textarea></div>
-        <button class="fsub" onclick="this.textContent='Message Sent ✓'; this.style.background='#16a34a'; this.disabled=true;">Send Message</button>
-      </div>
+        <div class="fg">
+          <label class="fl">Your Name</label>
+          <input type="text" class="fi" name="name" id="nameInput" placeholder="Jane Smith" />
+          <div class="error-msg">Name is required (min 2 characters)</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Your Email</label>
+          <input type="email" class="fi" name="email" id="emailInput" placeholder="jane@company.com" />
+          <div class="error-msg">Please enter a valid email address</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Your Message</label>
+          <textarea class="fta" name="message" id="messageInput" placeholder="Hey Sridhar, I'd love to connect about..."></textarea>
+          <div class="error-msg">Message is required (min 10 characters)</div>
+        </div>
+        <button type="submit" class="fsub" id="submitBtn" disabled>Send Message</button>
+      </form>
     </div>
   </div>
 </section>
@@ -1153,6 +1171,96 @@ const obs = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
 }, { threshold: 0.1 });
 document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Form Validation Functions
+function validateName(name) {
+  return name.trim().length >= 2;
+}
+
+function validateEmail(email) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+function validateMessage(message) {
+  return message.trim().length >= 10;
+}
+
+function showFieldError(fieldId, show) {
+  const field = document.getElementById(fieldId);
+  const container = field.closest('.fg');
+  
+  if (show) {
+    field.classList.add('error');
+    field.classList.remove('success');
+    container.classList.add('has-error');
+  } else {
+    field.classList.remove('error');
+    field.classList.add('success');
+    container.classList.remove('has-error');
+  }
+}
+
+function checkFormValidity() {
+  const nameInput = document.getElementById('nameInput');
+  const emailInput = document.getElementById('emailInput');
+  const messageInput = document.getElementById('messageInput');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  const isNameValid = validateName(nameInput.value);
+  const isEmailValid = validateEmail(emailInput.value);
+  const isMessageValid = validateMessage(messageInput.value);
+  
+  // Show/hide errors inline
+  showFieldError('nameInput', !isNameValid && nameInput.value !== '');
+  showFieldError('emailInput', !isEmailValid && emailInput.value !== '');
+  showFieldError('messageInput', !isMessageValid && messageInput.value !== '');
+  
+  // Enable button only if all fields are valid
+  if (isNameValid && isEmailValid && isMessageValid) {
+    submitBtn.disabled = false;
+  } else {
+    submitBtn.disabled = true;
+  }
+}
+
+function validateAndSubmitForm(event) {
+  event.preventDefault();
+  
+  const nameInput = document.getElementById('nameInput');
+  const emailInput = document.getElementById('emailInput');
+  const messageInput = document.getElementById('messageInput');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  const isNameValid = validateName(nameInput.value);
+  const isEmailValid = validateEmail(emailInput.value);
+  const isMessageValid = validateMessage(messageInput.value);
+  
+  if (isNameValid && isEmailValid && isMessageValid) {
+    submitBtn.textContent = 'Sending...';
+    submitBtn.disabled = true;
+    event.target.submit();
+  }
+}
+
+// Real-time validation feedback
+document.addEventListener('DOMContentLoaded', () => {
+  const nameInput = document.getElementById('nameInput');
+  const emailInput = document.getElementById('emailInput');
+  const messageInput = document.getElementById('messageInput');
+  
+  if (nameInput) {
+    nameInput.addEventListener('input', checkFormValidity);
+  }
+  
+  if (emailInput) {
+    emailInput.addEventListener('input', checkFormValidity);
+  }
+  
+  if (messageInput) {
+    messageInput.addEventListener('input', checkFormValidity);
+  }
+});
 </script>
 </body>
 </html>
